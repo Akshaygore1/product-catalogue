@@ -1,0 +1,54 @@
+# One command to run everything locally: `docker compose up --build`
+# Web: http://localhost:8080   Mail inbox (Mailpit): http://localhost:8025
+# Host ports can be changed with WEB_PORT and MAILPIT_PORT if they are taken.
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    environment:
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      TRUST_PROXY: ${TRUST_PROXY:-true}
+      WEB_BASE_URL: ${WEB_BASE_URL:-http://localhost:${WEB_PORT:-8080}}
+      PRODUCT_SOURCE: ${PRODUCT_SOURCE:-fakestore}
+      FAKESTORE_BASE_URL: ${FAKESTORE_BASE_URL:-https://fakestoreapi.com}
+      CATALOGUE_CACHE_TTL_SECONDS: ${CATALOGUE_CACHE_TTL_SECONDS:-300}
+      UPSTREAM_TIMEOUT_MS: ${UPSTREAM_TIMEOUT_MS:-5000}
+      FEATURED_PRODUCTS_FILE: ./data/featured.json
+      SMTP_HOST: ${SMTP_HOST:-mailpit}
+      SMTP_PORT: ${SMTP_PORT:-1025}
+      SMTP_SECURE: ${SMTP_SECURE:-false}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      MAIL_FROM: ${MAIL_FROM:-Catalogue <no-reply@catalogue.local>}
+      SALES_INBOX: ${SALES_INBOX:-sales@catalogue.local}
+    volumes:
+      # Edit the curated "top rated" list without rebuilding.
+      - ./apps/api/data:/app/apps/api/data:ro
+    depends_on:
+      mailpit:
+        condition: service_healthy
+    restart: unless-stopped
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    ports:
+      - '${WEB_PORT:-8080}:8080'
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+
+  mailpit:
+    image: axllent/mailpit:v1.27
+    ports:
+      - '${MAILPIT_PORT:-8025}:8025'
+    healthcheck:
+      test: ['CMD', '/mailpit', 'readyz']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
