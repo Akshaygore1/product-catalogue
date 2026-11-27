@@ -1,0 +1,74 @@
+/*
+ * Design tokens: the single source of truth for the look and feel.
+ * Tailwind's defaults are cleared so only these values can be used.
+ * A rebrand should mostly mean editing this file.
+ */
+@import 'tailwindcss';
+
+@theme {
+  /* Typography: SF Pro via the system font stack (SF Pro cannot be self-hosted on the web). */
+  --font-*: initial;
+  --font-sans:
+    -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', 'Helvetica Neue',
+    'Segoe UI', Roboto, Arial, sans-serif;
+
+  --font-weight-*: initial;
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+
+  /* Type scale: 13px is the base size, 24px the biggest. */
+  --text-*: initial;
+  --text-xs: 12px;
+  --text-xs--line-height: 16px;
+  --text-base: 13px;
+  --text-base--line-height: 20px;
+  --text-md: 14px;
+  --text-md--line-height: 20px;
+  --text-lg: 16px;
+  --text-lg--line-height: 24px;
+  --text-xl: 18px;
+  --text-xl--line-height: 26px;
+  --text-2xl: 24px;
+  --text-2xl--line-height: 32px;
+
+  /* Colours: solid only, no gradients. */
+  --color-*: initial;
+  --color-subtle: #7f7f7f;
+  --color-default: #5d5d5d;
+  --color-strong: #292929;
+  --color-selected: #f5f5f5;
+  --color-border: #f2f2f2;
+  --color-surface: #ffffff;
+  --color-accent: #1f3a5f;
+  --color-accent-hover: #172c48;
+  --color-on-accent: #ffffff;
+  --color-danger: #b42318;
+  --color-transparent: transparent;
+  --color-current: currentColor;
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+}
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    @apply bg-surface font-sans text-base font-regular text-default;
+  }
+
+  *,
+  ::before,
+  ::after {
+    border-color: var(--color-border);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+}
