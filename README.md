@@ -22,7 +22,7 @@ If a port is already in use, override it: `WEB_PORT=8088 docker compose up --bui
 
 ### Without Docker
 
-Requires Node 22+ and the pnpm version pinned in `package.json`. See the [pnpm installation guide](https://pnpm.io/installation).
+Use Node 22 (22.12 or later) and the pnpm version pinned in `package.json`. See the [pnpm installation guide](https://pnpm.io/installation).
 
 ```bash
 pnpm install
