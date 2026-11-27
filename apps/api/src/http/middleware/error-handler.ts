@@ -1,7 +1,6 @@
 import type { ApiErrorBody } from '@catalogue/shared';
 import type { ErrorRequestHandler, RequestHandler } from 'express';
-import { AppError, NotFoundError } from '../../domain/errors';
-import { RequestValidationError } from '../request-validation';
+import { AppError, NotFoundError, RequestValidationError } from '../../domain/errors';
 
 export const notFoundHandler: RequestHandler = (req, _res, next) => {
   next(new NotFoundError(`Route ${req.method} ${req.path} was not found.`));

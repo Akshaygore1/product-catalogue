@@ -51,6 +51,16 @@ test('submitting search shows only products with matching text', async ({ page }
     'Pocket Speaker',
     'Travel Backpack',
   ]);
+
+  await page.getByRole('searchbox', { name: 'Search products' }).fill('electronics');
+  await page.getByRole('button', { name: 'Search', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Results for “electronics”' })).toBeVisible();
+  await expect(page.getByRole('main').getByRole('heading', { level: 3 })).toHaveText([
+    'Pocket Speaker',
+    'Studio Headphones',
+    'Desk Charger',
+    'USB Cable',
+  ]);
 });
 
 test('selecting a product tile opens the details and loads its proxied image', async ({ page }) => {

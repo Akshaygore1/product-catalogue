@@ -13,6 +13,12 @@ export class AppError extends Error {
   }
 }
 
+export class RequestValidationError extends AppError {
+  constructor(readonly details: Record<string, string[] | undefined>) {
+    super(400, 'VALIDATION_ERROR', 'The request was invalid.');
+  }
+}
+
 export class NotFoundError extends AppError {
   constructor(message: string) {
     super(404, 'NOT_FOUND', message);
