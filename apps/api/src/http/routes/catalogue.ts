@@ -1,4 +1,5 @@
 import { Readable } from 'node:stream';
+import { pipeline } from 'node:stream/promises';
 import type { ReadableStream } from 'node:stream/web';
 import type { ApiData, Category, CategoryPage, Product } from '@catalogue/shared';
 import { Router } from 'express';
@@ -6,6 +7,7 @@ import { z } from 'zod';
 import { UpstreamUnavailableError } from '../../domain/errors';
 import type { CatalogueService } from '../../services/catalogue-service';
 import { presentProduct } from '../presenters';
+import { parseRequest } from '../request-validation';
 
 const SearchQuerySchema = z.object({
   q: z
@@ -27,7 +29,7 @@ export function catalogueRouter(catalogue: CatalogueService, imageTimeoutMs: num
   });
 
   router.get('/categories/:slug/products', async (req, res) => {
-    const { slug } = SlugParamSchema.parse(req.params);
+    const { slug } = parseRequest(SlugParamSchema, req.params);
     const page = await catalogue.getCategoryPage(slug);
     const body: ApiData<CategoryPage> = {
       data: {
@@ -47,20 +49,20 @@ export function catalogueRouter(catalogue: CatalogueService, imageTimeoutMs: num
   });
 
   router.get('/products', async (req, res) => {
-    const { q } = SearchQuerySchema.parse(req.query);
+    const { q } = parseRequest(SearchQuerySchema, req.query);
     const body: ApiData<Product[]> = { data: (await catalogue.search(q)).map(presentProduct) };
     res.json(body);
   });
 
   router.get('/products/:id', async (req, res) => {
-    const { id } = IdParamSchema.parse(req.params);
+    const { id } = parseRequest(IdParamSchema, req.params);
     const body: ApiData<Product> = { data: presentProduct(await catalogue.getProduct(id)) };
     res.json(body);
   });
 
   /** Streams the product image from the source. The URL comes from the catalogue, never the client. */
   router.get('/products/:id/image', async (req, res) => {
-    const { id } = IdParamSchema.parse(req.params);
+    const { id } = parseRequest(IdParamSchema, req.params);
     const product = await catalogue.getProduct(id);
 
     let upstream: Response;
@@ -78,7 +80,7 @@ export function catalogueRouter(catalogue: CatalogueService, imageTimeoutMs: num
 
     res.setHeader('Content-Type', contentType);
     res.setHeader('Cache-Control', 'public, max-age=86400');
-    Readable.fromWeb(upstream.body as ReadableStream).pipe(res);
+    await pipeline(Readable.fromWeb(upstream.body as ReadableStream), res);
   });
 
   return router;

@@ -11,6 +11,7 @@ const app = createApp({
   logger,
   corsOrigins: config.CORS_ORIGINS,
   imageTimeoutMs: config.UPSTREAM_TIMEOUT_MS,
+  trustProxy: config.TRUST_PROXY,
   catalogue,
   enquiries,
 });

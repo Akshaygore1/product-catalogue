@@ -4,7 +4,7 @@ Status: accepted
 
 ## Context
 
-Creative work is in progress and will replace the look and feel. A design system was provided: SF Pro (regular and medium), sizes 12, 13 (base), 14, 16, 18 and 24px, five greys, and Nucleo icons at 1px stroke. Solid colours only, no gradients.
+Creative work is in progress and will replace the look and feel. I started with my own design system. It uses SF Pro (regular and medium), sizes 12, 13 (base), 14, 16, 18 and 24px, five greys, Nucleo icons at 1px stroke and solid colours.
 
 ## Decision
 
@@ -12,7 +12,7 @@ Creative work is in progress and will replace the look and feel. A design system
 - One accent colour (`#1F3A5F`) for primary actions and one danger colour (`#B42318`) for errors were added, as the palette had none.
 - Presentational components (`ProductCard`, `Button`, `EnquiryForm`) are separate from pages that fetch data.
 - No component library such as MUI, which would impose its own visual style.
-- SF Pro is used through the system font stack, because its licence does not allow self-hosting on the web.
+- Use the system font stack for native rendering and avoid distributing a font file.
 - Icons go through one `Icon` component. Lucide (MIT) stands in for Nucleo, which needs a paid licence.
 
 ## Consequences

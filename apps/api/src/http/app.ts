@@ -14,6 +14,7 @@ export interface AppDependencies {
   logger: Logger;
   corsOrigins: string[];
   imageTimeoutMs: number;
+  trustProxy?: boolean;
   catalogue: CatalogueService;
   enquiries: EnquiryService;
 }
@@ -23,14 +24,16 @@ export function createApp(deps: AppDependencies): Express {
   const app = express();
 
   app.disable('x-powered-by');
-  // Behind one proxy (nginx locally, a load balancer on AWS): trust it for client IPs.
-  app.set('trust proxy', 1);
+  // Enable only when the API is reachable exclusively through one trusted proxy.
+  if (deps.trustProxy) app.set('trust proxy', 1);
 
   app.use(
     pinoHttp({
       logger: deps.logger,
       genReqId: (req, res) => {
-        const id = (req.headers['x-request-id'] as string | undefined) ?? randomUUID();
+        const header = req.headers['x-request-id'];
+        const id =
+          typeof header === 'string' && /^[\w-]{1,64}$/.test(header) ? header : randomUUID();
         res.setHeader('x-request-id', id);
         return id;
       },

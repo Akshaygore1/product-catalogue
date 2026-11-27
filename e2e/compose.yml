@@ -13,7 +13,6 @@ services:
       SALES_INBOX: sales@catalogue.test
     volumes:
       - ./e2e/fixtures/featured.json:/fixtures/featured.json:ro
-    ports: !reset []
     depends_on:
       catalogue-fixture:
         condition: service_healthy

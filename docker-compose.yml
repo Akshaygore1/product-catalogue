@@ -1,6 +1,6 @@
 # One command to run everything locally: `docker compose up --build`
 # Web: http://localhost:8080   Mail inbox (Mailpit): http://localhost:8025
-# Host ports can be changed with WEB_PORT, API_PORT and MAILPIT_PORT if they are taken.
+# Host ports can be changed with WEB_PORT and MAILPIT_PORT if they are taken.
 
 services:
   api:
@@ -9,6 +9,7 @@ services:
       dockerfile: apps/api/Dockerfile
     environment:
       LOG_LEVEL: ${LOG_LEVEL:-info}
+      TRUST_PROXY: ${TRUST_PROXY:-true}
       WEB_BASE_URL: ${WEB_BASE_URL:-http://localhost:${WEB_PORT:-8080}}
       PRODUCT_SOURCE: ${PRODUCT_SOURCE:-fakestore}
       FAKESTORE_BASE_URL: ${FAKESTORE_BASE_URL:-https://fakestoreapi.com}
@@ -25,8 +26,6 @@ services:
     volumes:
       # Edit the curated "top rated" list without rebuilding.
       - ./apps/api/data:/app/apps/api/data:ro
-    ports:
-      - '${API_PORT:-3000}:3000'
     depends_on:
       mailpit:
         condition: service_healthy

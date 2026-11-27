@@ -4,9 +4,10 @@ Guidance for AI coding agents working in this repository. Read `README.md` for s
 
 ## Commands
 
-- `pnpm install` - install (pnpm via Corepack; do not use npm or yarn)
+- `pnpm install` - install using the pnpm version in `package.json`
 - `pnpm dev` - API on :3000, web on :5173
 - `pnpm typecheck && pnpm lint` - must pass before any change is done
+- `pnpm test` - unit and API tests
 - `pnpm format` - Prettier
 - `docker compose up --build` - full stack with Mailpit
 

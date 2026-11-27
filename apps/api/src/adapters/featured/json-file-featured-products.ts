@@ -14,7 +14,12 @@ export class JsonFileFeaturedProducts implements FeaturedProducts {
   constructor(private readonly filePath: string) {}
 
   async listFeaturedIds(): Promise<string[]> {
-    const raw: unknown = JSON.parse(await readFile(this.filePath, 'utf8'));
-    return FeaturedFileSchema.parse(raw).productIds;
+    const content = await readFile(this.filePath, 'utf8');
+    try {
+      const raw: unknown = JSON.parse(content);
+      return FeaturedFileSchema.parse(raw).productIds;
+    } catch (cause) {
+      throw new Error('Invalid featured products file.', { cause });
+    }
   }
 }

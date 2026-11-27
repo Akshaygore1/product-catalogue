@@ -2,6 +2,7 @@ import { EnquiryInputSchema, type ApiData, type EnquiryReceipt } from '@catalogu
 import { Router } from 'express';
 import { rateLimit } from 'express-rate-limit';
 import type { EnquiryService } from '../../services/enquiry-service';
+import { parseRequest } from '../request-validation';
 
 export function enquiriesRouter(enquiries: EnquiryService): Router {
   const router = Router();
@@ -19,7 +20,7 @@ export function enquiriesRouter(enquiries: EnquiryService): Router {
   });
 
   router.post('/enquiries', limiter, async (req, res) => {
-    const input = EnquiryInputSchema.parse(req.body);
+    const input = parseRequest(EnquiryInputSchema, req.body);
     const body: ApiData<EnquiryReceipt> = { data: await enquiries.submit(input) };
     res.status(201).json(body);
   });

@@ -14,15 +14,15 @@ docker compose up --build
 | --------------------- | -------------------------------- |
 | Web app               | http://localhost:8080            |
 | Sales inbox (Mailpit) | http://localhost:8025            |
-| API health            | http://localhost:3000/api/health |
+| API health            | http://localhost:8080/api/health |
 
 Submit an enquiry from any product page and the email appears in Mailpit.
 
-If a port is already in use, override it: `WEB_PORT=8088 docker compose up --build` (also `API_PORT`, `MAILPIT_PORT`). Copying `.env.example` to `.env` is optional; every setting has a working default.
+If a port is already in use, override it: `WEB_PORT=8088 docker compose up --build` (also `MAILPIT_PORT`). Copying `.env.example` to `.env` is optional; every setting has a working default.
 
 ### Without Docker
 
-Requires Node 22+ and pnpm (via `corepack enable`).
+Requires Node 22+ and the pnpm version pinned in `package.json`. See the [pnpm installation guide](https://pnpm.io/installation).
 
 ```bash
 pnpm install
@@ -30,7 +30,18 @@ docker run -d -p 1025:1025 -p 8025:8025 axllent/mailpit:v1.27   # local inbox
 pnpm dev                                                          # web on :5173, API on :3000
 ```
 
-Other scripts: `pnpm build`, `pnpm typecheck`, `pnpm lint`, `pnpm format`.
+The Docker setup serves the API through nginx. The API's direct development server does not trust
+forwarded client IPs. Set `TRUST_PROXY=true` only when the API is accessible exclusively through
+one trusted reverse proxy.
+
+Other scripts include `pnpm build`, `pnpm typecheck`, `pnpm lint`, `pnpm format` and `pnpm format:check`.
+
+## Unit and API tests
+
+Run `pnpm test` after installing dependencies. Vitest covers catalogue rules, search, enquiry
+handling, email escaping and config parsing. Supertest exercises the Express app with in-memory
+adapters for catalogue data, featured IDs and email. These tests need no Docker, SMTP server or
+upstream credentials. GitHub Actions runs formatting, lint, typecheck, these tests and the build.
 
 ## End-to-end tests
 
@@ -50,7 +61,7 @@ browser, API and SMTP integration, with all test email delivered to the local te
 | -------------------- | ------------------------------------------------------------------------ |
 | Featured products    | Home displays exactly the five curated products in order.                |
 | Category browsing    | A category link opens the top-rated and additional products.             |
-| Search               | Submitting a term returns the title and description matches only.        |
+| Search               | Submitting a term returns matches by title, description or category.     |
 | Product details      | Selecting a tile shows its description, price and backend-served image.  |
 | Enquiry              | Submitting contact details shows “Thank you” and emails the sales inbox. |
 
@@ -129,32 +140,36 @@ The acceptance criteria leave gaps. These are the decisions made to fill them.
 9. **Product images** count as product data, so they are proxied through the API too.
 10. **The enquiry form is its own page** (`/products/:id/enquire`) rather than a modal, so it can be linked to and works with the back button.
 
-## Simplified or dropped
+## Dropped or simplified
 
-| Item                   | Decision and reason                                                                                                                                                         |
-| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| SF Pro font            | Apple's licence does not allow self-hosting SF Pro on the web. The system font stack renders SF Pro on Apple devices and a close fallback elsewhere.                        |
-| Nucleo icons           | Nucleo is a paid licence, and the solution must not depend on paid services. Lucide (MIT) is used at 1px stroke behind a single `Icon` component, so switching is one file. |
-| Enquiry persistence    | See assumption 6.                                                                                                                                                           |
-| Infrastructure as code | Not included; see "Path to AWS".                                                                                                                                            |
+| Item                   | Decision and reason                                                                                                                             |
+| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| SF Pro font            | My starter design system used SF Pro. A system font stack gives Apple devices their native font and uses a system fallback elsewhere.           |
+| Nucleo icons           | My starter design system used Nucleo. I used Lucide (MIT) at 1px stroke behind a single `Icon` component so the reviewer needs no icon licence. |
+| Enquiry persistence    | See assumption 6.                                                                                                                               |
+| Infrastructure as code | Not included; see "Path to AWS".                                                                                                                |
 
-## Path to AWS
+## How it grows
 
-The containers are ready for AWS as they are.
+The ports allow a new catalogue source, featured-products store or email provider to be wired in
+at the composition root. The design tokens and presentational components provide a starting
+point for the agency's redesign. The shared schemas keep the web and API contracts aligned.
 
-- **API**: push the image to ECR and run on ECS Fargate (or App Runner) behind an ALB, using `/api/health` as the target health check.
+### Path to AWS
+
+The existing containers can be used as the starting point for an AWS deployment.
+
+- **API**: push the image to ECR and run on ECS Fargate (or App Runner) behind an ALB, using `/api/health` as the target health check. Restrict API ingress to the trusted proxy before enabling `TRUST_PROXY`.
 - **Web**: either run the nginx container the same way, or upload the static build to S3 behind CloudFront with `/api/*` routed to the ALB.
 - **Email**: Amazon SES via its SMTP interface. Set `SMTP_HOST`, `SMTP_PORT=587`, `SMTP_USER`, `SMTP_PASS` from Secrets Manager.
 - **Config**: environment variables (validated at startup) from ECS task definitions and Secrets Manager.
 - **Logs**: structured JSON (pino) goes to CloudWatch with request IDs.
 
-## Next steps
+## Next day
 
-1. Add service and API tests for failure paths, including when the SMTP server rejects an enquiry.
-2. Store enquiries (database adapter) and send the customer a confirmation email.
-3. Replace `featured.json` with a CMS or admin screen (new `FeaturedProducts` adapter).
-4. Apply the creative agency's design by updating the tokens and components.
-5. CI pipeline (lint, typecheck, test, build images) and infrastructure as code.
+1. Add browser coverage for recovering from an email failure and include the browser suite in CI.
+2. Persist enquiries so sales can recover and retry delivery after an SMTP outage.
+3. Configure a shared rate-limit store before running multiple API replicas.
 
 ## Repository layout
 
@@ -167,6 +182,7 @@ packages/
 e2e/              Browser acceptance tests and their Docker fixtures
 docs/
   adr/            Architecture decision records
+  plan.md         Feature and verification plan
 AI_USAGE.md       How AI was used to plan and build this
 CONTEXT.md        Domain glossary
 AGENTS.md         Instructions for AI coding agents working in this repo
@@ -174,4 +190,4 @@ AGENTS.md         Instructions for AI coding agents working in this repo
 
 ## Time spent
 
-_To be filled in._
+About 1 hour 30 minutes total. I did not track planning, building, testing and reviewing separately.
