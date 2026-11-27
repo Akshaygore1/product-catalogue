@@ -32,6 +32,31 @@ pnpm dev                                                          # web on :5173
 
 Other scripts: `pnpm build`, `pnpm typecheck`, `pnpm lint`, `pnpm format`.
 
+## End-to-end tests
+
+With Docker running and Compose 2.24.4 or later, run from the repository root:
+
+```bash
+pnpm install --frozen-lockfile
+pnpm exec playwright install --only-shell chromium
+pnpm test:e2e
+```
+
+The Chromium suite uses a dedicated Docker Compose stack with a fixed Fake Store catalogue and
+Mailpit. Playwright starts and stops the stack as part of the run. The tests exercise the real
+browser, API and SMTP integration, with all test email delivered to the local test inbox.
+
+| Acceptance criterion | Browser check                                                            |
+| -------------------- | ------------------------------------------------------------------------ |
+| Featured products    | Home displays exactly the five curated products in order.                |
+| Category browsing    | A category link opens the top-rated and additional products.             |
+| Search               | Submitting a term returns the title and description matches only.        |
+| Product details      | Selecting a tile shows its description, price and backend-served image.  |
+| Enquiry              | Submitting contact details shows “Thank you” and emails the sales inbox. |
+
+The test stack uses web port `18080` and Mailpit port `18025`. Set `E2E_WEB_PORT` or
+`E2E_MAILPIT_PORT` to use another local port.
+
 ## Stack and why
 
 | Layer   | Choice                                               | Why                                                                                                                             |
@@ -106,13 +131,12 @@ The acceptance criteria leave gaps. These are the decisions made to fill them.
 
 ## Simplified or dropped
 
-| Item                   | Decision and reason                                                                                                                                                                                   |
-| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Automated tests        | Not included, to stay inside the time-box. Strict TypeScript, lint and shared schemas are the safety net. Ports make adding tests easy: services can run against in-memory adapters. First next step. |
-| SF Pro font            | Apple's licence does not allow self-hosting SF Pro on the web. The system font stack renders SF Pro on Apple devices and a close fallback elsewhere.                                                  |
-| Nucleo icons           | Nucleo is a paid licence, and the solution must not depend on paid services. Lucide (MIT) is used at 1px stroke behind a single `Icon` component, so switching is one file.                           |
-| Enquiry persistence    | See assumption 6.                                                                                                                                                                                     |
-| Infrastructure as code | Not included; see "Path to AWS".                                                                                                                                                                      |
+| Item                   | Decision and reason                                                                                                                                                         |
+| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| SF Pro font            | Apple's licence does not allow self-hosting SF Pro on the web. The system font stack renders SF Pro on Apple devices and a close fallback elsewhere.                        |
+| Nucleo icons           | Nucleo is a paid licence, and the solution must not depend on paid services. Lucide (MIT) is used at 1px stroke behind a single `Icon` component, so switching is one file. |
+| Enquiry persistence    | See assumption 6.                                                                                                                                                           |
+| Infrastructure as code | Not included; see "Path to AWS".                                                                                                                                            |
 
 ## Path to AWS
 
@@ -126,7 +150,7 @@ The containers are ready for AWS as they are.
 
 ## Next steps
 
-1. Tests: service tests against in-memory adapters, API route tests, one end-to-end test of the enquiry journey.
+1. Add service and API tests for failure paths, including when the SMTP server rejects an enquiry.
 2. Store enquiries (database adapter) and send the customer a confirmation email.
 3. Replace `featured.json` with a CMS or admin screen (new `FeaturedProducts` adapter).
 4. Apply the creative agency's design by updating the tokens and components.
@@ -140,6 +164,7 @@ apps/
   web/            React app (pages, components, design tokens)
 packages/
   shared/         Zod schemas and types shared by both apps
+e2e/              Browser acceptance tests and their Docker fixtures
 docs/
   adr/            Architecture decision records
 AI_USAGE.md       How AI was used to plan and build this
