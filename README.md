@@ -142,7 +142,7 @@ packages/
   shared/         Zod schemas and types shared by both apps
 docs/
   adr/            Architecture decision records
-  ai-usage.md     How AI was used to plan and build this
+AI_USAGE.md       How AI was used to plan and build this
 CONTEXT.md        Domain glossary
 AGENTS.md         Instructions for AI coding agents working in this repo
 ```
